@@ -1,15 +1,4 @@
-import mysql.connector
+import sqlite3
 
-db = mysql.connector.connect(
-
-    host="localhost",
-
-    user="root",
-
-    password="",
-
-    database="retinascan_db"
-
-)
-
+db = sqlite3.connect("retinascan.db", check_same_thread=False)
 cursor = db.cursor()
