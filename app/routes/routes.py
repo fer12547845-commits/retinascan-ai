@@ -42,7 +42,7 @@ def save_user():
     username = request.form['username']
     password = request.form['password']
     hashed_password = generate_password_hash(password)
-    sql = "INSERT INTO users (fullname, age, email, password) VALUES (%s,%s,%s,%s)"
+    sql = "INSERT INTO users (fullname, age, email, password) VALUES (?,?,?,?)"
     try:
         cursor.execute(sql, (fullname, age, username, hashed_password))
         db.commit()
@@ -57,7 +57,7 @@ def save_user():
 def validate_login():
     username = request.form['username']
     password = request.form['password']
-    cursor.execute("SELECT * FROM users WHERE email=%s", (username,))
+    cursor.execute("SELECT * FROM users WHERE email=?", (username,))
     user = cursor.fetchone()
     if user and check_password_hash(user[4], password):
         session['user']    = user[1]
@@ -73,15 +73,15 @@ def google_login_redirect():
     name  = request.args.get('name')
     if not email:
         return redirect(url_for('main.login'))
-    cursor.execute("SELECT * FROM users WHERE email=%s", (email,))
+    cursor.execute("SELECT * FROM users WHERE email=?", (email,))
     user = cursor.fetchone()
     if not user:
         cursor.execute(
-            "INSERT INTO users (fullname, age, email, password) VALUES (%s,%s,%s,%s)",
+            "INSERT INTO users (fullname, age, email, password) VALUES (?,?,?,?)",
             (name, 0, email, "google_account")
         )
         db.commit()
-        cursor.execute("SELECT * FROM users WHERE email=%s", (email,))
+        cursor.execute("SELECT * FROM users WHERE email=?", (email,))
         user = cursor.fetchone()
     session['user']    = name
     session['user_id'] = user[0]
@@ -100,15 +100,15 @@ def google_login_token():
         email   = decoded.get('email', '')
         name    = decoded.get('name', '')
 
-        cursor.execute("SELECT * FROM users WHERE email=%s", (email,))
+        cursor.execute("SELECT * FROM users WHERE email=?", (email,))
         user = cursor.fetchone()
         if not user:
             cursor.execute(
-                "INSERT INTO users (fullname, age, email, password) VALUES (%s,%s,%s,%s)",
+                "INSERT INTO users (fullname, age, email, password) VALUES (?,?,?,?)",
                 (name, 0, email, "google_account")
             )
             db.commit()
-            cursor.execute("SELECT * FROM users WHERE email=%s", (email,))
+            cursor.execute("SELECT * FROM users WHERE email=?", (email,))
             user = cursor.fetchone()
 
         session['user']    = name
@@ -145,7 +145,7 @@ def analizar():
     if user_id:
         try:
             cursor.execute(
-                "INSERT INTO scan_history (user_id, image_filename, prediction, confidence, severity) VALUES (%s,%s,%s,%s,%s)",
+                "INSERT INTO scan_history (user_id, image_filename, prediction, confidence, severity) VALUES (?,?,?,?,?)",
                 (user_id, filename, result['prediction'], result['confidence'], result['severity'])
             )
             db.commit()
@@ -168,7 +168,7 @@ def historial():
     if user_id:
         try:
             cursor.execute(
-                "SELECT * FROM scan_history WHERE user_id=%s ORDER BY scanned_at DESC LIMIT 20",
+                "SELECT * FROM scan_history WHERE user_id=? ORDER BY scanned_at DESC LIMIT 20",
                 (user_id,)
             )
             scans = cursor.fetchall()
